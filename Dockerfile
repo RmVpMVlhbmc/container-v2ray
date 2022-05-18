@@ -11,6 +11,7 @@ RUN set -ex && cd /v2ray-core-*/ \
 FROM alpine:latest
 
 ENV V2RAY_LOCATION_ASSET /usr/local/share/v2ray
+ENV V2RAY_LOCATION_CONFIG /config
 
 LABEL org.opencontainers.image.authors "Fei Yang <projects@feiyang.moe>"
 LABEL org.opencontainers.image.url https://github.com/RmVpMVlhbmc/container-v2ray
@@ -31,4 +32,4 @@ VOLUME ["/config", "/data"]
 
 WORKDIR /config
 
-CMD ["/usr/bin/v2ray", "run", "-c", "config.json"]
+CMD ["/usr/bin/v2ray", "run"]

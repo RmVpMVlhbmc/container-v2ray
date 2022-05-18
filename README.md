@@ -30,6 +30,7 @@ docker push --all-tags $CONTAINER_REGISTRY_USERNAME/${PWD##*/}
 | Name | Default value | Description |
 | --- | --- | --- |
 | V2RAY_LOCATION_ASSET | /usr/local/share/v2ray | Routing assets directory |
+| V2RAY_LOCATION_CONFIG | /config | Configuration directory |
 
 For more environment variables, please refer to the [official document](https://www.v2fly.org/config/env.html) for further info (Simp. Chinese only).
 
