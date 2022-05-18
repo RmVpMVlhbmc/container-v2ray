@@ -21,13 +21,6 @@ jobs:
         run: |
           sudo docker buildx create --platform linux/amd64,linux/arm64 --use
           sudo docker run --privileged --rm tonistiigi/binfmt --install arm64
-      - name: Get container name
-        id: name
-        uses: jungwinter/split@v2
-        with:
-          msg: ${{ github.repository }}
-          #Repository owner's name mustn't includes any slash.
-          separator: "-"
       - name: Setup container registry credentials
         env:
           CONTAINER_REGISTRY_NAMESPACE: ${{ secrets.CONTAINER_REGISTRY_NAMESPACE }}
@@ -42,6 +35,7 @@ jobs:
         env:
           CONTAINER_REGISTRY_NAMESPACE: ${{ secrets.CONTAINER_REGISTRY_NAMESPACE }}
           CONTAINER_REGISTRY_USERNAME: ${{ secrets.CONTAINER_REGISTRY_USERNAME }}
+          CONTAINER_REGISTRY_IMAGE: ${{ secrets.CONTAINER_REGISTRY_IMAGE }}
         if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
         run: |
           ARGS=()
@@ -52,9 +46,11 @@ jobs:
             --label org.opencontainers.image.created="$(date --rfc-3339 seconds --utc)" \
             --label org.opencontainers.image.version="$(< DISPLAY_VERSION)" \
             --label org.opencontainers.image.revision=${{ github.sha }} \
-            --tag "$CONTAINER_REGISTRY_NAMESPACE/$CONTAINER_REGISTRY_USERNAME/${{ steps.name.outputs._1 }}:latest" \
-            --tag "$CONTAINER_REGISTRY_NAMESPACE/$CONTAINER_REGISTRY_USERNAME/${{ steps.name.outputs._1 }}:$(< DISPLAY_VERSION)" .
+            --tag "$CONTAINER_REGISTRY_NAMESPACE/$CONTAINER_REGISTRY_USERNAME/$CONTAINER_REGISTRY_IMAGE:latest" \
+            --tag "$CONTAINER_REGISTRY_NAMESPACE/$CONTAINER_REGISTRY_USERNAME/$CONTAINER_REGISTRY_IMAGE:$(< DISPLAY_VERSION)" .
       - name: Build container images
+        env:
+          CONTAINER_REGISTRY_IMAGE: ${{ secrets.CONTAINER_REGISTRY_IMAGE }}
         #Test build for pull requests
         if: ${{ github.event_name == 'pull_request' }}
         run: |
@@ -62,7 +58,7 @@ jobs:
           for i in $(find ./VERSIONS/ -type f); do
             ARGS+=('--build-arg' "${i##*/}=$(< $i)")
           done
-          sudo docker build "${ARGS[@]}" --tag ${{ steps.name.outputs._1 }} \
+          sudo docker build "${ARGS[@]}" --tag "$CONTAINER_REGISTRY_IMAGE" \
             --label org.opencontainers.image.created="$(date --rfc-3339 seconds --utc)" \
             --label org.opencontainers.image.version=$(< DISPLAY_VERSION) \
             --label org.opencontainers.image.revision=${{ github.sha }} .
